@@ -1,2 +1,2 @@
 # transactional-outbox-demo
-Demo for using transactional outbox pattern in microservices architecture
+Demo for implementing transactional outbox pattern in microservices architecture
