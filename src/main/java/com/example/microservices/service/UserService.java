@@ -1,10 +1,12 @@
 package com.example.microservices.service;
 
 import com.example.microservices.dto.UserRequestDto;
+import com.example.microservices.entity.Outbox;
 import com.example.microservices.entity.User;
+import com.example.microservices.mapper.UserMapper;
+import com.example.microservices.mapper.UserRequestDtoMapper;
+import com.example.microservices.repository.OutboxRepository;
 import com.example.microservices.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,24 +14,35 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final String topic;
+    private final OutboxRepository outboxRepository;
+    private final UserRequestDtoMapper userRequestDtoMapper;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, KafkaTemplate<String, Object> kafkaTemplate, @Value("${kafka.topic.user}") String topic) {
+
+    public UserService(UserRepository userRepository, OutboxRepository outboxRepository,
+                       UserRequestDtoMapper userRequestDtoMapper, UserMapper userMapper) {
         this.userRepository = userRepository;
-        this.kafkaTemplate = kafkaTemplate;
-        this.topic = topic;
+        this.outboxRepository = outboxRepository;
+        this.userRequestDtoMapper = userRequestDtoMapper;
+        this.userMapper = userMapper;
     }
 
     @Transactional
     public User createUser(UserRequestDto userRequestDto) {
-        User user = userRequestDto.mapToUserEntity();
+        try {
+            User user = userRequestDtoMapper.mapToUserEntity(userRequestDto);
 
-        user = userRepository.save(user);
+            user = userRepository.save(user);
 
-        kafkaTemplate.send(topic, user);
+            Outbox outbox = userMapper.mapToOutBoxEntity(user);
 
-        return user;
+            outboxRepository.save(outbox);
+
+            return user;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

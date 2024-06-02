@@ -57,14 +57,4 @@ public class UserRequestDto {
     public void setEmail(String email) {
         this.email = email;
     }
-
-    public User mapToUserEntity() {
-        return new User(
-                firstName,
-                lastName,
-                dob,
-                address,
-                email
-        );
-    }
 }
