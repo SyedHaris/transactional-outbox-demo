@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface OutboxRepository extends JpaRepository<Outbox, Long> {
 
-    List<Outbox> findTopByIsDelivered(boolean status);
+    List<Outbox> findTop10ByIsDelivered(boolean status);
 
 }
